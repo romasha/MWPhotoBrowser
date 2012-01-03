@@ -10,7 +10,7 @@
 #import "MWPhotoBrowser.h"
 #import "MWZoomingScrollView.h"
 #import "MBProgressHUD.h"
-#import "SDImageCache.h"
+#import "iPhoneApplicationViewController.h"
 
 #define SYSTEM_VERSION_EQUAL_TO(v)                  ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedSame)
 #define SYSTEM_VERSION_GREATER_THAN(v)              ([[[UIDevice currentDevice] systemVersion] compare:v options:NSNumericSearch] == NSOrderedDescending)
@@ -172,7 +172,13 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 	}
 	return self;
 }
-
+- (id)initWithDelegate:(id <MWPhotoBrowserDelegate>)delegate startAtIndex:(NSUInteger)startIndex{
+    self = [self initWithDelegate:delegate];
+    if (self) {
+        _currentPageIndex = startIndex;
+    }
+    return self;
+}
 - (id)initWithPhotos:(NSArray *)photosArray {
 	if ((self = [self init])) {
 		_depreciatedPhotoData = [photosArray retain];
@@ -194,7 +200,6 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
     [_actionButton release];
   	[_depreciatedPhotoData release];
     [self releaseAllUnderlyingPhotos];
-    [[SDImageCache sharedImageCache] clearMemory]; // clear memory
     [_photos release];
     [_progressHUD release];
     [super dealloc];
@@ -246,8 +251,8 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
     _toolbar.autoresizingMask = UIViewAutoresizingFlexibleTopMargin | UIViewAutoresizingFlexibleWidth;
 
     // Toolbar Items
-    _previousButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"MWPhotoBrowser.bundle/images/UIBarButtonItemArrowLeft.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoPreviousPage)];
-    _nextButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"MWPhotoBrowser.bundle/images/UIBarButtonItemArrowRight.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoNextPage)];
+    _previousButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-arrow1-white-left.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoPreviousPage)];
+    _nextButton = [[UIBarButtonItem alloc] initWithImage:[UIImage imageNamed:@"icon-arrow1-white-right.png"] style:UIBarButtonItemStylePlain target:self action:@selector(gotoNextPage)];
     _actionButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction target:self action:@selector(actionButtonPressed:)];
     
     // Update
@@ -292,12 +297,14 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 	[self updateNavigation];
     
     // Done button - if we're first on a nav stack
-    if ([self.navigationController.viewControllers objectAtIndex:0] == self) {        
-        UIBarButtonItem *doneButton = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneButtonPressed:)] autorelease];
-        if ([doneButton respondsToSelector:@selector(setTintColor:)])
-            doneButton.tintColor = [UIColor blackColor];
-        self.navigationItem.rightBarButtonItem = doneButton;
-    }
+//    if ([self.navigationController.viewControllers objectAtIndex:0] == self) {        
+//        UIBarButtonItem *doneButton = [[[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemDone target:self action:@selector(doneButtonPressed:)] autorelease];
+//        if ([doneButton respondsToSelector:@selector(setTintColor:)])
+//            doneButton.tintColor = [UIColor blackColor];
+//        self.navigationItem.rightBarButtonItem = doneButton;
+//    }
+     iPhoneApplicationViewController * ipavc = (iPhoneApplicationViewController *) [UIApplication sharedAppDelegate].appViewController;
+    [ipavc customizeNavigationBarWithItem:self.navigationItem forSender:self];
     
     // Content offset
 	_pagingScrollView.contentOffset = [self contentOffsetForPageAtIndex:_currentPageIndex];
@@ -737,7 +744,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
         // photo loaded so load ajacent now
         [self loadAdjacentPhotosIfNecessary:currentPhoto];
     }
-    
+    [[UIApplication sharedAppDelegate].model setTheSelectedItemIndex:index];
 }
 
 #pragma mark - Frame Calculations
@@ -827,7 +834,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
     
 	// Title
 	if ([self numberOfPhotos] > 1) {
-		self.title = [NSString stringWithFormat:@"%i of %i", _currentPageIndex+1, [self numberOfPhotos]];		
+		self.title = [NSString stringWithFormat:NSLocalizedString(@"%i of %i", @"Used in full screen photo viewer to show current and total count of photos"), _currentPageIndex+1, [self numberOfPhotos]];		
 	} else {
 		self.title = nil;
 	}
@@ -852,8 +859,14 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
 	
 }
 
-- (void)gotoPreviousPage { [self jumpToPageAtIndex:_currentPageIndex-1]; }
-- (void)gotoNextPage { [self jumpToPageAtIndex:_currentPageIndex+1]; }
+- (void)gotoPreviousPage { 
+    [[SoundsController sharedSoundEngine] playSoundWithName:SOUND_DEFAULT_BUTTON_TAP];
+    [self jumpToPageAtIndex:_currentPageIndex-1]; 
+}
+- (void)gotoNextPage { 
+    [[SoundsController sharedSoundEngine] playSoundWithName:SOUND_DEFAULT_BUTTON_TAP];
+    [self jumpToPageAtIndex:_currentPageIndex+1]; 
+}
 
 #pragma mark - Control Hiding / Showing
 
@@ -1010,7 +1023,7 @@ navigationBarBackgroundImageLandscapePhone = _navigationBarBackgroundImageLandsc
         // The sample image is based on the
         // work by: http://www.pixelpressicons.com
         // licence: http://creativecommons.org/licenses/by/2.5/ca/
-        self.progressHUD.customView = [[[UIImageView alloc] initWithImage:[UIImage imageNamed:@"MBCheckmark.png"]] autorelease];
+        self.progressHUD.customView = [[[UIImageView alloc] initWithImage:[UIImage imageNamed:@"success.png"]] autorelease];
         [self.view addSubview:_progressHUD];
     }
     return _progressHUD;

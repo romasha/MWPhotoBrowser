@@ -8,7 +8,6 @@
 
 #import <UIKit/UIKit.h>
 #import <MessageUI/MessageUI.h>
-#import "MWPhoto.h"
 #import "MWPhotoProtocol.h"
 #import "MWCaptionView.h"
 
@@ -37,6 +36,7 @@
 // Init
 - (id)initWithPhotos:(NSArray *)photosArray  __attribute__((deprecated)); // Depreciated
 - (id)initWithDelegate:(id <MWPhotoBrowserDelegate>)delegate;
+- (id)initWithDelegate:(id <MWPhotoBrowserDelegate>)delegate startAtIndex:(NSUInteger)startIndex;
 
 // Reloads the photo browser and refetches data
 - (void)reloadData;
