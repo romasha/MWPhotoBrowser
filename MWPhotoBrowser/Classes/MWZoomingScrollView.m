@@ -8,7 +8,6 @@
 
 #import "MWZoomingScrollView.h"
 #import "MWPhotoBrowser.h"
-#import "MWPhoto.h"
 
 // Declare private methods of browser
 @interface MWPhotoBrowser ()
